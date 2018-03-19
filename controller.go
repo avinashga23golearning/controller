@@ -13,6 +13,12 @@ import (
 //PersonController handles person
 type PersonController struct{}
 
+var personPersistenceManager *persistence.PersonPersistenceManager
+
+func init() {
+	personPersistenceManager = persistence.NewPersonPersistenceManager()
+}
+
 //NewPersonController creates and returns new person controller
 func NewPersonController() *PersonController {
 	return &PersonController{}
@@ -21,7 +27,7 @@ func NewPersonController() *PersonController {
 //GetPersonByID gets person by id
 func (PersonController) GetPersonByID(rw http.ResponseWriter, req *http.Request, params httprouter.Params) {
 	id := params.ByName("id")
-	person := persistence.NewPersonPersistenceManager().GetPersonByID(id)
+	person := personPersistenceManager.GetPersonByID(id)
 	rw.Header().Add("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusOK)
 	json.NewEncoder(rw).Encode(person)
@@ -32,7 +38,7 @@ func (PersonController) CreatePerson(rw http.ResponseWriter, req *http.Request, 
 	person := model.Person{}
 
 	json.NewDecoder(req.Body).Decode(&person)
-	id := persistence.NewPersonPersistenceManager().CreatePerson(person)
+	id := personPersistenceManager.CreatePerson(person)
 
 	rw.Header().Add("Location", "http://localhost:8080/person/"+id)
 	rw.WriteHeader(http.StatusCreated)
@@ -41,7 +47,7 @@ func (PersonController) CreatePerson(rw http.ResponseWriter, req *http.Request, 
 //DeletePersonByID deletes person by id
 func (PersonController) DeletePersonByID(rw http.ResponseWriter, req *http.Request, params httprouter.Params) {
 	id := params.ByName("id")
-	persistence.NewPersonPersistenceManager().DeletePerson(id)
+	personPersistenceManager.DeletePerson(id)
 	rw.WriteHeader(http.StatusOK)
 }
 
@@ -52,6 +58,6 @@ func (PersonController) UpdatePerson(rw http.ResponseWriter, req *http.Request, 
 	json.NewDecoder(req.Body).Decode(&person)
 	person.ID = id
 
-	persistence.NewPersonPersistenceManager().UpdatePerson(person)
+	personPersistenceManager.UpdatePerson(person)
 	rw.WriteHeader(http.StatusOK)
 }
