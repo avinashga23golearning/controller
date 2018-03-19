@@ -3,22 +3,15 @@ package controller
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 
 	"github.com/avinashga23golearning/model"
+	"github.com/avinashga23golearning/persistence"
 
 	"github.com/julienschmidt/httprouter"
 )
 
 //PersonController handles person
 type PersonController struct{}
-
-var personMap map[int]model.Person
-var counter int
-
-func init() {
-	personMap = make(map[int]model.Person)
-}
 
 //NewPersonController creates and returns new person controller
 func NewPersonController() *PersonController {
@@ -27,14 +20,11 @@ func NewPersonController() *PersonController {
 
 //GetPersonByID gets person by id
 func (PersonController) GetPersonByID(rw http.ResponseWriter, req *http.Request, params httprouter.Params) {
-	id, _ := strconv.Atoi(params.ByName("id"))
-	if person, exists := personMap[id]; exists {
-		rw.Header().Add("Content-Type", "application/json")
-		rw.WriteHeader(http.StatusOK)
-		json.NewEncoder(rw).Encode(person)
-	} else {
-		rw.WriteHeader(http.StatusNotFound)
-	}
+	id := params.ByName("id")
+	person := persistence.NewPersonPersistenceManager().GetPersonByID(id)
+	rw.Header().Add("Content-Type", "application/json")
+	rw.WriteHeader(http.StatusOK)
+	json.NewEncoder(rw).Encode(person)
 }
 
 //CreatePerson creates person
@@ -42,32 +32,26 @@ func (PersonController) CreatePerson(rw http.ResponseWriter, req *http.Request, 
 	person := model.Person{}
 
 	json.NewDecoder(req.Body).Decode(&person)
-	counter++
-	person.ID = counter
-	personMap[counter] = person
+	id := persistence.NewPersonPersistenceManager().CreatePerson(person)
 
-	rw.Header().Add("Location", "http://localhost:8080/person/"+strconv.Itoa(person.ID))
+	rw.Header().Add("Location", "http://localhost:8080/person/"+id)
 	rw.WriteHeader(http.StatusCreated)
 }
 
 //DeletePersonByID deletes person by id
 func (PersonController) DeletePersonByID(rw http.ResponseWriter, req *http.Request, params httprouter.Params) {
-	id, _ := strconv.Atoi(params.ByName("id"))
-	delete(personMap, id)
+	id := params.ByName("id")
+	persistence.NewPersonPersistenceManager().DeletePerson(id)
 	rw.WriteHeader(http.StatusOK)
 }
 
 //UpdatePerson updates person
 func (PersonController) UpdatePerson(rw http.ResponseWriter, req *http.Request, params httprouter.Params) {
-	id, _ := strconv.Atoi(params.ByName("id"))
-	if person, exists := personMap[id]; exists {
-		json.NewDecoder(req.Body).Decode(&person)
-		person.ID = id
-		personMap[id] = person
+	var person model.Person
+	id := params.ByName("id")
+	json.NewDecoder(req.Body).Decode(&person)
+	person.ID = id
 
-		rw.WriteHeader(http.StatusOK)
-	} else {
-		rw.WriteHeader(http.StatusPreconditionFailed)
-	}
-
+	persistence.NewPersonPersistenceManager().UpdatePerson(person)
+	rw.WriteHeader(http.StatusOK)
 }
