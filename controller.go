@@ -7,7 +7,7 @@ import (
 	"github.com/avinashga23golearning/model"
 	"github.com/avinashga23golearning/persistence"
 
-	"github.com/julienschmidt/httprouter"
+	"github.com/gorilla/mux"
 )
 
 //PersonController handles person
@@ -25,8 +25,10 @@ func NewPersonController() *PersonController {
 }
 
 //GetPersonByID gets person by id
-func (PersonController) GetPersonByID(rw http.ResponseWriter, req *http.Request, params httprouter.Params) {
-	id := params.ByName("id")
+func (PersonController) GetPersonByID(rw http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+
+	id := vars["id"]
 	person := personPersistenceManager.GetPersonByID(id)
 	rw.Header().Add("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusOK)
@@ -34,7 +36,7 @@ func (PersonController) GetPersonByID(rw http.ResponseWriter, req *http.Request,
 }
 
 //CreatePerson creates person
-func (PersonController) CreatePerson(rw http.ResponseWriter, req *http.Request, params httprouter.Params) {
+func (PersonController) CreatePerson(rw http.ResponseWriter, req *http.Request) {
 	person := model.Person{}
 
 	json.NewDecoder(req.Body).Decode(&person)
@@ -45,16 +47,18 @@ func (PersonController) CreatePerson(rw http.ResponseWriter, req *http.Request, 
 }
 
 //DeletePersonByID deletes person by id
-func (PersonController) DeletePersonByID(rw http.ResponseWriter, req *http.Request, params httprouter.Params) {
-	id := params.ByName("id")
+func (PersonController) DeletePersonByID(rw http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	id := vars["id"]
 	personPersistenceManager.DeletePerson(id)
 	rw.WriteHeader(http.StatusOK)
 }
 
 //UpdatePerson updates person
-func (PersonController) UpdatePerson(rw http.ResponseWriter, req *http.Request, params httprouter.Params) {
+func (PersonController) UpdatePerson(rw http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
 	var person model.Person
-	id := params.ByName("id")
+	id := vars["id"]
 	json.NewDecoder(req.Body).Decode(&person)
 	person.ID = id
 
