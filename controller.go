@@ -29,10 +29,15 @@ func (PersonController) GetPersonByID(rw http.ResponseWriter, req *http.Request)
 	vars := mux.Vars(req)
 
 	id := vars["id"]
-	person := personPersistenceManager.GetPersonByID(id)
-	rw.Header().Add("Content-Type", "application/json")
-	rw.WriteHeader(http.StatusOK)
-	json.NewEncoder(rw).Encode(person)
+	person, notFound := personPersistenceManager.GetPersonByID(id)
+
+	if notFound {
+		rw.WriteHeader(http.StatusNotFound)
+	} else {
+		rw.Header().Add("Content-Type", "application/json")
+		rw.WriteHeader(http.StatusOK)
+		json.NewEncoder(rw).Encode(person)
+	}
 }
 
 //CreatePerson creates person
